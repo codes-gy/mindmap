@@ -1,0 +1,936 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>마인드맵</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: 학습 현황 대시보드 → 탭 + SVG 마인드맵(주제 → 묶음 → 개념) → 전체 노트. 개념을 누르면 설명 카드가 떠오른다 */
+:root {
+  --bg: #F3F6F2;
+  --surface: #FFFFFF;
+  --ink: #17201A;
+  --muted: #5B675F;
+  --line: #D3DCD4;
+  --track: #E4EAE4;
+  --accent: #3D7A2A;
+  --on-branch: #FFFFFF;
+  --code-bg: #F0F3EF;
+  --shadow: 0 10px 30px rgba(23, 32, 26, .14);
+  --c0: #3D7A2A; --c1: #2B6B8C; --c2: #8248A0; --c3: #B0502A; --c4: #9A7020;
+  --c5: #2A7A6E; --c6: #5158B0; --c7: #A43F5A; --c8: #66722A; --c9: #496A8A;
+  --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111612; --surface: #1A211C; --ink: #E4EBE5; --muted: #98A59C; --line: #2E3931; --track: #27302A;
+    --accent: #8BC46A; --on-branch: #111612; --code-bg: #141A16; --shadow: 0 10px 30px rgba(0, 0, 0, .5);
+    --c0: #8BC46A; --c1: #6DB4D8; --c2: #C394DA; --c3: #E8916B; --c4: #DDB65E;
+    --c5: #6AC5B5; --c6: #9DA3EE; --c7: #E48AA3; --c8: #BAC66B; --c9: #95B4D4;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111612; --surface: #1A211C; --ink: #E4EBE5; --muted: #98A59C; --line: #2E3931; --track: #27302A;
+  --accent: #8BC46A; --on-branch: #111612; --code-bg: #141A16; --shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  --c0: #8BC46A; --c1: #6DB4D8; --c2: #C394DA; --c3: #E8916B; --c4: #DDB65E;
+  --c5: #6AC5B5; --c6: #9DA3EE; --c7: #E48AA3; --c8: #BAC66B; --c9: #95B4D4;
+}
+.b0 { --bc: var(--c0); } .b1 { --bc: var(--c1); } .b2 { --bc: var(--c2); } .b3 { --bc: var(--c3); } .b4 { --bc: var(--c4); }
+.b5 { --bc: var(--c5); } .b6 { --bc: var(--c6); } .b7 { --bc: var(--c7); } .b8 { --bc: var(--c8); } .b9 { --bc: var(--c9); }
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.65;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1280px; margin: 0 auto; padding-block: 40px 120px; display: flex; flex-direction: column; gap: 28px; }
+
+header { display: flex; flex-direction: column; gap: 10px; max-width: 70ch; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0; }
+h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 0; font-weight: 700; text-wrap: balance; letter-spacing: -.01em; }
+h2, h3 { text-wrap: balance; }
+.lead { margin: 0; color: var(--muted); }
+
+button {
+  font: inherit; font-size: 14px; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 14px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.tag { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--bc, var(--accent)); color: var(--bc, var(--accent)); white-space: nowrap; }
+
+.bar { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 4px; background: var(--accent); transition: width .3s; }
+
+/* 학습 현황 */
+.dash { display: flex; flex-direction: column; gap: 16px; }
+.dash-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.dash-head h2 { margin: 0; font-size: 22px; }
+.reset { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.reset button { font-size: 13px; padding: 4px 10px; }
+.reset .danger { border-color: var(--c7); color: var(--c7); }
+.dash-top { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+.dash-top .overall { grid-column: 1 / -1; }
+.overall, .mapcard {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; text-align: left;
+}
+.overall .big { font-size: 44px; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+.overall .big small { font-size: 20px; font-weight: 600; margin-left: 2px; }
+.label { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; margin: 0; }
+.sub-line { font-size: 13px; color: var(--muted); margin: 0; }
+.mapcard { cursor: pointer; font-size: 15px; }
+.mapcard .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.mapcard .name { font-weight: 700; font-size: 17px; }
+.mapcard .pct { font-size: 22px; font-weight: 600; }
+.mapcard[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.dash-bottom { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+.panel-box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+.panel-box h3 { margin: 0; font-size: 16px; }
+.topics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 24px; }
+.topic-row {
+  display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 6px; align-items: center;
+  border: none; background: none; padding: 8px 6px; margin: 0 -6px; border-radius: 8px; text-align: left; width: calc(100% + 12px);
+}
+.topic-row:hover { background: var(--bg); }
+.topic-row .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bc); }
+.topic-row .tname { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topic-row .cnt { font-size: 12px; color: var(--muted); }
+.topic-row .bar { grid-column: 2 / 4; height: 6px; }
+.topic-row.full .cnt { color: var(--accent); font-weight: 500; }
+.next-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.next-list button { width: 100%; text-align: left; display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 12px; }
+.next-list .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bc); }
+.next-list .t { display: flex; flex-direction: column; line-height: 1.35; min-width: 0; }
+.next-list .t small { color: var(--muted); font-size: 12px; }
+.empty { color: var(--muted); font-size: 14px; margin: 0; }
+
+/* 툴바 · 탭 */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.toolbar .stat { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-right: auto; font-variant-numeric: tabular-nums; }
+.tabs { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.tabs button { border: none; background: none; border-radius: 7px; padding: 6px 18px; font-weight: 600; color: var(--muted); }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+
+/* 마인드맵 */
+.map-box { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow-x: auto; padding-block: 8px; }
+#map { display: block; margin-inline: auto; max-width: none; }
+#map text { font-family: var(--sans); dominant-baseline: central; }
+.edge { fill: none; stroke: var(--bc); stroke-opacity: .5; stroke-width: 1.5; }
+.edge.root { stroke-width: 3; stroke-opacity: .7; }
+.edge.c { stroke-opacity: .35; stroke-width: 1.2; }
+.root-node rect { fill: var(--ink); }
+.root-node text { fill: var(--bg); font-size: 20px; font-weight: 700; }
+.branch, .group, .concept, .must { cursor: pointer; }
+.branch rect { fill: var(--bc); }
+.branch text { fill: var(--on-branch); font-size: 14px; font-weight: 600; }
+.branch .cnt { font-family: var(--mono); font-size: 12px; font-weight: 500; fill-opacity: .85; }
+.branch .more { fill: var(--bc); font-family: var(--mono); font-size: 12px; }
+.branch:hover rect { filter: brightness(1.08); }
+.group rect { fill: var(--surface); stroke: var(--bc); stroke-opacity: .55; stroke-width: 1.2; }
+.group text { fill: var(--ink); font-size: 13.5px; font-weight: 600; }
+.group .cnt { font-family: var(--mono); font-size: 11px; font-weight: 500; fill: var(--muted); }
+.group .arrow { fill: var(--bc); font-size: 12px; }
+.group.open rect { fill: color-mix(in srgb, var(--bc) 10%, var(--surface)); stroke-opacity: 1; }
+.group.full rect { fill: color-mix(in srgb, var(--bc) 16%, var(--surface)); }
+.group:hover rect { stroke-opacity: 1; }
+.concept rect { fill: var(--bg); stroke: var(--line); stroke-width: 1; }
+.concept circle { fill: var(--bc); }
+.concept text { fill: var(--ink); font-size: 12.5px; }
+.concept .deep { fill: var(--bc); font-family: var(--mono); font-size: 10px; font-weight: 500; }
+.concept:hover rect { stroke: var(--bc); }
+.concept.done rect, .must.done rect { fill: color-mix(in srgb, var(--bc) 12%, var(--surface)); stroke: color-mix(in srgb, var(--bc) 45%, var(--surface)); }
+.tick { fill: none; stroke: var(--on-branch); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.must rect { fill: color-mix(in srgb, var(--bc) 14%, var(--surface)); stroke: var(--bc); stroke-dasharray: 4 3; }
+.must circle { fill: var(--bc); }
+.must text { fill: var(--bc); font-size: 13px; font-weight: 700; }
+.on rect { stroke: var(--bc); stroke-width: 2; stroke-dasharray: none; }
+#map g:focus { outline: none; }
+#map g:focus-visible rect { stroke: var(--ink); stroke-width: 2.5; }
+.hint { margin: -16px 0 0; font-size: 13px; color: var(--muted); }
+
+/* 설명 카드 */
+.panel {
+  position: fixed; z-index: 20;
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(80vh, 820px); overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--bc);
+  border-radius: 12px; box-shadow: var(--shadow);
+  padding: 18px 20px 16px; display: flex; flex-direction: column; gap: 14px;
+}
+.panel .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.panel .cat { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--bc); margin: 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.panel h2 { font-size: 21px; line-height: 1.3; margin: -6px 0 0; }
+.close { border: none; background: none; font-size: 22px; line-height: 1; padding: 4px 6px; color: var(--muted); }
+.panel .nav { display: flex; gap: 8px; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--line); }
+.panel .pos { font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.done-btn { align-self: flex-start; font-weight: 600; }
+.done-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+
+/* 개념 설명 본문 (카드와 노트 공용) */
+.doc { display: flex; flex-direction: column; gap: 14px; font-size: 14.5px; }
+.doc .def { font-size: 15.5px; font-weight: 600; margin: 0; padding-left: 12px; border-left: 3px solid var(--bc); }
+.doc section { display: flex; flex-direction: column; gap: 6px; }
+.doc h4 { margin: 0; font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; color: var(--muted); font-weight: 500; text-transform: uppercase; }
+.doc p, .doc ul { margin: 0; }
+.doc ul { padding-left: 18px; display: flex; flex-direction: column; gap: 5px; }
+.doc li::marker { color: var(--bc); }
+.doc b { font-weight: 600; }
+.doc .step { padding-left: 4px; }
+.doc pre { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+.doc pre code { background: none; border: none; padding: 0; white-space: pre; }
+.doc .warn ul li::marker { content: "! "; color: var(--c3); font-family: var(--mono); font-weight: 600; }
+.doc .qa { background: var(--bg); border-radius: 8px; padding: 12px 14px; gap: 8px; }
+.doc .qa .qtext { font-weight: 600; }
+.doc details summary { cursor: pointer; color: var(--bc); font-size: 13.5px; font-weight: 500; }
+.doc details[open] summary { margin-bottom: 6px; }
+.rels { display: flex; flex-wrap: wrap; gap: 6px; }
+.rels button { font-size: 12.5px; padding: 3px 10px; border-radius: 999px; }
+.rels span { font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px dashed var(--line); color: var(--muted); }
+.ptabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); margin-top: -4px; }
+.ptabs button { border: none; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 6px 10px; color: var(--muted); font-weight: 600; }
+.ptabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--bc); }
+.ptabs .quiz-toggle { margin-left: auto; font-size: 12.5px; font-weight: 500; }
+.quiz-toggle[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.ptabs .quiz-toggle[aria-pressed="true"] { border-radius: 6px; }
+.doc .ana p { font-style: italic; }
+.doc .ans { background: color-mix(in srgb, var(--bc) 9%, var(--surface)); border-radius: 8px; padding: 12px 14px; }
+.doc .ans p { font-size: 15px; }
+.flow { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 0; counter-reset: step; }
+.flow li { counter-increment: step; display: flex; align-items: center; font-size: 13px; }
+.flow li::before { content: counter(step); font-family: var(--mono); font-size: 11px; color: var(--bc); margin-right: 6px; }
+.flow li { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; }
+.flow li + li { margin-left: 22px; position: relative; }
+.flow li + li::after { content: "→"; position: absolute; left: -18px; color: var(--bc); }
+.cmp { overflow-x: auto; }
+.cmp table { border-collapse: collapse; font-size: 13px; min-width: 100%; }
+.cmp th, .cmp td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+.cmp thead th { background: var(--bg); font-weight: 600; }
+.cmp tbody th { font-weight: 600; color: var(--muted); white-space: nowrap; }
+.cmp .me { background: color-mix(in srgb, var(--bc) 12%, var(--surface)); }
+.myth { list-style: none; padding-left: 0 !important; }
+.myth li { display: flex; flex-direction: column; gap: 2px; border-left: 3px solid var(--c7); padding-left: 10px; }
+.myth .m::before { content: "오해 "; font-family: var(--mono); font-size: 11px; color: var(--c7); }
+.myth .f::before { content: "사실 "; font-family: var(--mono); font-size: 11px; color: var(--accent); }
+.fq { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+.fq li::marker { color: var(--bc); font-family: var(--mono); }
+.reveal summary { cursor: pointer; color: var(--bc); font-size: 13px; font-weight: 500; }
+.reveal[open] summary { margin-bottom: 4px; }
+.item details.more { border-top: 1px solid var(--line); padding-top: 8px; }
+.item details.more > summary { cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--bc); }
+.item details.more[open] > summary { margin-bottom: 10px; }
+.grp > .doc { margin-bottom: 4px; }
+code { font-family: var(--mono); font-size: .88em; background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+
+/* 전체 노트 */
+.notes-head { display: flex; flex-direction: column; gap: 4px; margin-top: 20px; }
+.notes-head h2 { margin: 0; font-size: 24px; }
+.notes-head p { margin: 0; color: var(--muted); }
+.notes { display: flex; flex-direction: column; gap: 24px; margin-top: 16px; }
+.topic { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; display: flex; flex-direction: column; gap: 18px; }
+.topic > h3 { margin: 0; font-size: 19px; display: flex; align-items: center; gap: 10px; }
+.topic > h3::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--bc); flex: none; }
+.topic > h3 .num { font-size: 13px; color: var(--muted); font-weight: 400; margin-left: auto; }
+.grp { display: flex; flex-direction: column; gap: 10px; }
+.grp > h4 { margin: 0; font-size: 15px; color: var(--muted); font-weight: 600; }
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; align-items: start; }
+.item { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.item.done { border-color: color-mix(in srgb, var(--bc) 45%, var(--surface)); background: color-mix(in srgb, var(--bc) 5%, var(--surface)); }
+.check { display: flex; align-items: flex-start; gap: 10px; font-weight: 700; font-size: 16px; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--bc); flex: none; }
+.check .tag { margin-left: auto; font-weight: 500; }
+.item .doc { font-size: 14px; }
+.must-box {
+  border: 1px dashed var(--bc); border-radius: 10px; padding: 14px 16px;
+  background: color-mix(in srgb, var(--bc) 8%, var(--surface)); display: flex; flex-direction: column; gap: 10px;
+}
+
+@media (max-width: 1180px) {
+  .dash-top { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .dash-top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-bottom { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .dash-top, .topics, .items { grid-template-columns: minmax(0, 1fr); }
+  .panel { max-height: 65vh; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Spring · CS · 네트워크 · 자료구조 · 알고리즘</p>
+    <h1>마인드맵</h1>
+    <p class="lead">스프링 핵심 개념, 운영체제·데이터베이스 같은 CS 기초, 배열·해시·트리·그래프를 다루는 자료구조, TCP부터 라우팅·소켓 I/O·클라우드 네트워크까지 다루는 네트워크, 그리고 복잡도부터 DP·세그먼트 트리·자바 코딩테스트 요령까지 담은 알고리즘을 개념 하나씩 나눠 정리했습니다. 면접에 자주 나오는 개념은 심화로 표시하고 동작 원리, 코드, 모범 답변까지 담았습니다.</p>
+  </header>
+
+  <section class="dash" aria-labelledby="dashTitle">
+    <div class="dash-head">
+      <h2 id="dashTitle">학습 현황</h2>
+      <div class="reset">
+        <span>완료 기록은 이 브라우저에 저장됩니다.</span>
+        <button type="button" id="resetAsk">기록 초기화</button>
+        <span id="resetConfirm" hidden>모든 완료 기록을 지울까요?
+          <button type="button" class="danger" id="resetYes">지우기</button>
+          <button type="button" id="resetNo">취소</button>
+        </span>
+      </div>
+    </div>
+    <div class="dash-top">
+      <div class="overall">
+        <p class="label">전체 진도</p>
+        <div class="big num" id="ovPct">0<small>%</small></div>
+        <div class="bar" id="ovBar"><i style="width:0%"></i></div>
+        <p class="sub-line num" id="ovSub"></p>
+      </div>
+      <button type="button" class="mapcard" data-map="spring" id="card-spring"></button>
+      <button type="button" class="mapcard" data-map="cs" id="card-cs"></button>
+      <button type="button" class="mapcard" data-map="net" id="card-net"></button>
+      <button type="button" class="mapcard" data-map="ds" id="card-ds"></button>
+      <button type="button" class="mapcard" data-map="algo" id="card-algo"></button>
+    </div>
+    <div class="dash-bottom">
+      <div class="panel-box">
+        <h3 id="topicsTitle">주제별 진도</h3>
+        <div class="topics" id="topics"></div>
+      </div>
+      <div class="panel-box">
+        <h3>다음에 볼 개념</h3>
+        <ul class="next-list" id="nextList"></ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist" aria-label="마인드맵 선택">
+      <button type="button" role="tab" data-map="spring" aria-selected="true">Spring</button>
+      <button type="button" role="tab" data-map="cs" aria-selected="false">CS 기초</button>
+      <button type="button" role="tab" data-map="net" aria-selected="false">네트워크</button>
+      <button type="button" role="tab" data-map="ds" aria-selected="false">자료구조</button>
+      <button type="button" role="tab" data-map="algo" aria-selected="false">알고리즘</button>
+    </div>
+    <span class="stat" id="stat"></span>
+    <button type="button" id="expandAll">주제 모두 펼치기</button>
+    <button type="button" id="detailAll">개념까지 모두 넓히기</button>
+    <button type="button" id="collapseAll">모두 접기</button>
+    <button type="button" class="quiz-toggle" aria-pressed="false">자기 점검 모드</button>
+  </div>
+
+  <div class="map-box" id="mapBox"><svg id="map" role="img" aria-label="마인드맵"></svg></div>
+  <p class="hint">주제를 누르면 접고 펼치고, 묶음을 누르면 그 안의 개념이 가지로 펼쳐집니다. 개념을 누르면 개념 · 코드·실무 · 면접 탭으로 나뉜 설명 카드가 열립니다. 자기 점검 모드를 켜면 답변이 가려집니다. "심화" 표시는 면접 빈출 개념, 체크 표시는 완료한 개념입니다.</p>
+
+  <section>
+    <div class="notes-head">
+      <h2>전체 노트</h2>
+      <p>지금 보고 있는 마인드맵의 모든 개념 설명입니다. 체크박스로 완료를 표시할 수 있습니다.</p>
+    </div>
+    <div class="notes" id="notes"></div>
+  </section>
+</div>
+
+<aside class="panel" id="panel" hidden aria-live="polite">
+  <div class="top">
+    <p class="cat" id="pCat"></p>
+    <button type="button" class="close" id="pClose" aria-label="설명 닫기">×</button>
+  </div>
+  <h2 id="pTitle"></h2>
+  <div class="ptabs" id="pTabs" role="tablist" aria-label="설명 구분">
+    <button type="button" role="tab" data-tab="concept">개념</button>
+    <button type="button" role="tab" data-tab="practice">코드 · 실무</button>
+    <button type="button" role="tab" data-tab="interview">면접</button>
+    <button type="button" class="quiz-toggle" aria-pressed="false">자기 점검 모드</button>
+  </div>
+  <div class="doc" id="pBody"></div>
+  <button type="button" class="done-btn" id="pDone" aria-pressed="false">학습 완료로 표시</button>
+  <div class="nav">
+    <button type="button" id="pPrev">← 이전</button>
+    <span class="pos" id="pPos"></span>
+    <button type="button" id="pNext">다음 →</button>
+  </div>
+</aside>
+
+<script src="data/spring-0.js"></script>
+<script src="data/spring-1.js"></script>
+<script src="data/spring-2.js"></script>
+<script src="data/spring-3.js"></script>
+<script src="data/spring-4.js"></script>
+<script src="data/spring-5.js"></script>
+<script src="data/spring-6.js"></script>
+<script src="data/spring-7.js"></script>
+<script src="data/spring-8.js"></script>
+<script src="data/spring-9.js"></script>
+<script src="data/spring-10.js"></script>
+<script src="data/spring-11.js"></script>
+<script src="data/spring-12.js"></script>
+<script src="data/cs-2.js"></script>
+<script src="data/cs-4.js"></script>
+<script src="data/cs-5.js"></script>
+<script src="data/cs-6.js"></script>
+<script src="data/cs-7.js"></script>
+<script src="data/cs-8.js"></script>
+<script src="data/cs-9.js"></script>
+<script src="data/cs-10.js"></script>
+<script src="data/cs-11.js"></script>
+<script src="data/cs-13.js"></script>
+<script src="data/cs-14.js"></script>
+<script src="data/cs-15.js"></script>
+<script src="data/cs-17.js"></script>
+<script src="data/net-0.js"></script>
+<script src="data/net-1.js"></script>
+<script src="data/net-2.js"></script>
+<script src="data/net-3.js"></script>
+<script src="data/net-4.js"></script>
+<script src="data/net-5.js"></script>
+<script src="data/ds-0.js"></script>
+<script src="data/ds-1.js"></script>
+<script src="data/ds-2.js"></script>
+<script src="data/algo-0.js"></script>
+<script src="data/algo-1.js"></script>
+<script src="data/algo-2.js"></script>
+<script src="data/algo-3.js"></script>
+<script src="data/algo-4.js"></script>
+<script src="data/algo-5.js"></script>
+<script src="data/x/spring-0.js"></script>
+<script src="data/x/spring-1.js"></script>
+<script src="data/x/spring-2.js"></script>
+<script src="data/x/spring-3.js"></script>
+<script src="data/x/spring-4.js"></script>
+<script src="data/x/spring-5.js"></script>
+<script src="data/x/spring-6.js"></script>
+<script src="data/x/spring-7.js"></script>
+<script src="data/x/spring-8.js"></script>
+<script src="data/x/spring-9.js"></script>
+<script src="data/x/spring-10.js"></script>
+<script src="data/x/spring-11.js"></script>
+<script src="data/x/spring-12.js"></script>
+<script src="data/x/cs-2.js"></script>
+<script src="data/x/cs-4.js"></script>
+<script src="data/x/cs-5.js"></script>
+<script src="data/x/cs-6.js"></script>
+<script src="data/x/cs-7.js"></script>
+<script src="data/x/cs-8.js"></script>
+<script src="data/x/cs-9.js"></script>
+<script src="data/x/cs-10.js"></script>
+<script src="data/x/cs-11.js"></script>
+<script src="data/x/cs-13.js"></script>
+<script src="data/x/cs-14.js"></script>
+<script src="data/x/cs-15.js"></script>
+<script src="data/x/cs-17.js"></script>
+<script src="data/x/net-0.js"></script>
+<script src="data/x/net-1.js"></script>
+<script src="data/x/net-2.js"></script>
+<script src="data/x/net-3.js"></script>
+<script src="data/x/net-4.js"></script>
+<script src="data/x/net-5.js"></script>
+<script src="data/x/ds-0.js"></script>
+<script src="data/x/algo-0.js"></script>
+<script src="data/x/algo-1.js"></script>
+<script src="data/x/algo-2.js"></script>
+<script src="data/x/algo-3.js"></script>
+<script src="data/x/algo-4.js"></script>
+<script src="data/x/algo-5.js"></script>
+<script>
+const DATA = window.MINDMAP || {};
+// 확장 파일(30초 답변, 비유, 흐름, 실무 사례, 흔한 오해, 꼬리 질문, 비교 표)을 개념 이름으로 합친다
+const XDATA = window.MINDMAP_X || {};
+Object.keys(DATA).forEach(k => {
+  const x = XDATA[k]; if (!x) return;
+  DATA[k].groups.forEach(gr => {
+    if (x.groups && x.groups[gr.name]) gr.cmp = x.groups[gr.name].cmp;
+    gr.items.forEach(it => Object.assign(it, (x.items || {})[it.t] || {}));
+  });
+});
+const load = key => Array.from({ length: 20 }, (_, i) => DATA[`${key}-${i}`]).filter(Boolean);
+const MAPS = {
+  spring: { root: 'Spring', title: 'Spring', branches: load('spring') },
+  cs: { root: 'CS', title: 'CS 기초', branches: load('cs') },
+  net: { root: 'Network', title: '네트워크', branches: load('net') },
+  ds: { root: '자료구조', title: '자료구조', branches: load('ds') },
+  algo: { root: 'Algorithm', title: '알고리즘', branches: load('algo') }
+};
+const MUST_TITLE = '알아둘 것';
+
+const SANS = '"IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif';
+const MONO = '"IBM Plex Mono", ui-monospace, Menlo, monospace';
+const ROW = 34, GAP = 18, BR_H = 34, G_H = 26, CROW = 30, C_H = 24;
+const svg = document.getElementById('map');
+const box = document.getElementById('mapBox');
+const panel = document.getElementById('panel');
+const collapsed = new Set();
+const expanded = new Set();
+let cur = 'spring', B = [], ROOT = '', flat = [];
+let sel = null;   // [branch, group, concept], group -1 = 알아둘 것
+
+// 완료 기록
+let done = new Set();
+try { done = new Set(JSON.parse(localStorage.getItem('mindmap-done') || '[]')); } catch (e) {}
+// CS 기초에 있던 네트워크 · 자료구조 · 알고리즘 주제가 각자의 탭으로 옮겨 갔으므로 완료 기록도 옮긴다
+// 자료구조는 주제 세 개로 나뉘었으므로 묶음 단위로 옮긴다
+const DS_SPLIT = { '선형 · 해시': ['선형 구조', '스택 · 큐', '해시', '알아둘 것'], '트리 · 힙': ['트리', '힙 · 우선순위 큐', '디스크 기반 트리'], '그래프': ['그래프'] };
+const MOVED = [...Object.entries(DS_SPLIT).flatMap(([b, gs]) => gs.map(g => [`cs|자료구조|${g}${g === '알아둘 것' ? '' : '|'}`, `ds|${b}|${g}${g === '알아둘 것' ? '' : '|'}`])), ['cs|알고리즘|', 'algo|핵심 알고리즘|'], ['cs|네트워크|', 'net|네트워크 기초|'], ['cs|네트워크 · 브라우저|', 'net|네트워크 · 브라우저|'], ['cs|실시간 통신 · 프로토콜|', 'net|실시간 통신 · 프로토콜|']];
+if ([...done].some(id => MOVED.some(([a]) => id.startsWith(a)))) {
+  done = new Set([...done].map(id => { const m = MOVED.find(([a]) => id.startsWith(a)); return m ? m[1] + id.slice(m[0].length) : id; }));
+  try { localStorage.setItem('mindmap-done', JSON.stringify([...done])); } catch (e) {}
+}
+function save() { try { localStorage.setItem('mindmap-done', JSON.stringify([...done])); } catch (e) {} }
+function idOf(key, i, g, c) {
+  const b = MAPS[key].branches[i];
+  return g < 0 ? `${key}|${b.name}|${MUST_TITLE}` : `${key}|${b.name}|${b.groups[g].name}|${b.groups[g].items[c].t}`;
+}
+const isDone = (i, g, c) => done.has(idOf(cur, i, g, c));
+const itemOf = (i, g, c) => B[i].groups[g].items[c];
+const same = (a, b) => a && b && a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+function eachNode(bs, i, fn) {
+  bs[i].groups.forEach((gr, g) => gr.items.forEach((_, c) => fn(g, c)));
+  fn(-1, -1);
+}
+function branchCount(i) { let d = 0, n = 0; eachNode(B, i, (g, c) => { n++; if (isDone(i, g, c)) d++; }); return [d, n]; }
+function groupCount(i, g) { const n = B[i].groups[g].items.length; let d = 0; for (let c = 0; c < n; c++) if (isDone(i, g, c)) d++; return [d, n]; }
+// 관련 개념은 지금 탭에서 먼저 찾고, 없으면 다른 탭에서 찾는다
+function findByTitle(t) {
+  for (const key of [cur, ...Object.keys(MAPS).filter(k => k !== cur)]) {
+    const bs = MAPS[key].branches;
+    for (let i = 0; i < bs.length; i++) for (let g = 0; g < bs[i].groups.length; g++) {
+      const c = bs[i].groups[g].items.findIndex(x => x.t === t);
+      if (c >= 0) return [key, i, g, c];
+    }
+  }
+  return null;
+}
+
+const ctx = document.createElement('canvas').getContext('2d');
+function measure(t, font, fam = SANS) { ctx.font = font + ' ' + fam; return ctx.measureText(t).width; }
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function rich(s) { return esc(s).replace(/`([^`]+)`/g, '<code>$1</code>'); }
+function block(lines) {
+  let out = '', list = [];
+  const flush = () => { if (list.length) { out += '<ul>' + list.join('') + '</ul>'; list = []; } };
+  (lines || []).forEach(l => {
+    if (l.startsWith('- ')) {
+      const t = l.slice(2), m = t.match(/^(.{1,40}?): ([\s\S]*)$/);
+      list.push(`<li>${m ? `<b>${rich(m[1])}</b>: ${rich(m[2])}` : rich(t)}</li>`);
+    } else { flush(); out += `<p${/^\d+\)/.test(l) ? ' class="step"' : ''}>${rich(l)}</p>`; }
+  });
+  flush();
+  return out;
+}
+// 자기 점검 모드: 켜면 답변이 가려지고 눌러야 보인다
+let quiz = false;
+try { quiz = localStorage.getItem('mindmap-quiz') === '1'; } catch (e) {}
+const answer = (html, label = '답 보기') => quiz ? `<details class="reveal"><summary>${label}</summary>${html}</details>` : html;
+const ulist = (arr, cls = '') => `<ul${cls ? ` class="${cls}"` : ''}>${arr.map(x => `<li>${rich(x)}</li>`).join('')}</ul>`;
+function cmpHtml(cmp, t) {
+  if (!cmp || !cmp.cols) return '';
+  const on = k => cmp.cols[k] === t ? ' class="me"' : '';
+  return `<div class="cmp"><table><thead><tr>${cmp.cols.map((c, k) => `<th${on(k)}>${rich(c)}</th>`).join('')}</tr></thead>` +
+    `<tbody>${cmp.rows.map(r => `<tr>${r.map((c, k) => k ? `<td${on(k)}>${rich(c)}</td>` : `<th>${rich(c)}</th>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+// 개념 설명은 세 부분으로 나눈다: 개념(정의·비유·원리·흐름·비교) / 코드·실무 / 면접
+function docParts(it, gr, opts = {}) {
+  let concept = `<p class="def">${rich(it.d)}</p>`;
+  if (it.ana) concept += `<section class="ana"><h4>비유</h4><p>${rich(it.ana)}</p></section>`;
+  if (it.why) concept += `<section><h4>왜 필요한가</h4><p>${rich(it.why)}</p></section>`;
+  if (it.how && it.how.length) concept += `<section><h4>${it.deep ? '동작 원리' : '설명'}</h4>${block(it.how)}</section>`;
+  if (it.flow && it.flow.length) concept += `<section><h4>흐름</h4><ol class="flow">${it.flow.map(s => `<li>${rich(s)}</li>`).join('')}</ol></section>`;
+  if (opts.cmp !== false && gr && gr.cmp) concept += `<section><h4>같은 묶음 비교</h4>${cmpHtml(gr.cmp, it.t)}</section>`;
+
+  let practice = '';
+  if (it.code) practice += `<section><h4>코드 예시</h4><pre><code>${esc(it.code.replace(/^\n+|\s+$/g, ''))}</code></pre></section>`;
+  if (it.use && it.use.length) practice += `<section><h4>실무 사례</h4>${ulist(it.use)}</section>`;
+  if (it.warn && it.warn.length) practice += `<section class="warn"><h4>주의할 점</h4>${ulist(it.warn)}</section>`;
+  if (it.myth && it.myth.length) practice += `<section><h4>흔한 오해</h4><ul class="myth">${it.myth.map(([m, f]) => `<li><span class="m">${rich(m)}</span><span class="f">${rich(f)}</span></li>`).join('')}</ul></section>`;
+
+  let interview = '';
+  if (it.ans) interview += `<section class="ans"><h4>30초 답변</h4>${answer(`<p>${rich(it.ans)}</p>`, '30초 답변 보기')}</section>`;
+  if (it.qa) interview += `<section class="qa"><h4>면접 질문</h4><p class="qtext">${rich(it.qa[0])}</p>${answer(`<p>${rich(it.qa[1])}</p>`)}</section>`;
+  if (it.fq && it.fq.length) interview += `<section><h4>꼬리 질문</h4><ol class="fq">${it.fq.map(([q, a]) => `<li><p class="qtext">${rich(q)}</p>${answer(`<p>${rich(a)}</p>`)}</li>`).join('')}</ol></section>`;
+  if (opts.rels && it.rel && it.rel.length) {
+    interview += `<section><h4>관련 개념</h4><div class="rels">${it.rel.map(r => {
+      const f = findByTitle(r);
+      if (!f) return `<span>${esc(r)}</span>`;
+      const other = f[0] !== cur ? ` <small>· ${esc(MAPS[f[0]].title)}</small>` : '';
+      return `<button type="button" data-rel="${f.join(',')}">${esc(r)}${other}</button>`;
+    }).join('')}</div></section>`;
+  }
+  return { concept, practice, interview };
+}
+function mustHtml(i) { return `<ul>${B[i].must.map(m => `<li>${rich(m)}</li>`).join('')}</ul>`; }
+
+// 마인드맵 그리기
+const groupH = (i, g) => expanded.has(i + '-' + g) ? Math.max(ROW, B[i].groups[g].items.length * CROW + 8) : ROW;
+const mark = (x, y, d, r = 3.5) => d
+  ? `<circle cx="${x}" cy="${y}" r="7"/><path class="tick" d="M${x - 3.5},${y} l2.5,2.6 l4.5,-5"/>`
+  : `<circle cx="${x}" cy="${y}" r="${r}"/>`;
+function render() {
+  const rootW = Math.max(measure(ROOT, '700 20px') + 52, 96);
+  const brIn = rootW / 2 + 60;
+  const half = Math.ceil(B.length / 2), all = B.map((_, i) => i);
+  const sides = [{ dir: 1, idx: all.slice(0, half) }, { dir: -1, idx: all.slice(half) }];
+  const edges = [], nodes = [];
+  let minX = -rootW / 2, maxX = rootW / 2, maxH = BR_H;
+  const grow = (dir, x) => { if (dir > 0) maxX = Math.max(maxX, x); else minX = Math.min(minX, -x); };
+  const anchor = dir => dir > 0 ? 'start' : 'end';
+
+  sides.forEach(({ dir, idx }) => {
+    const counts = idx.map(i => { const [d, n] = branchCount(i); return (d === n ? '✓ ' : '') + `${d}/${n}`; });
+    const widths = idx.map((i, k) => measure(B[i].name, '600 14px') + 8 + measure(counts[k], '500 12px', MONO) + 34);
+    const gIn = brIn + Math.max(...widths) + 56;
+    const heights = idx.map(i => {
+      if (collapsed.has(i)) return ROW;
+      return B[i].groups.reduce((s, _, g) => s + groupH(i, g), 0) + ROW;
+    });
+    const total = heights.reduce((a, b) => a + b, 0) + GAP * (idx.length - 1);
+    maxH = Math.max(maxH, total);
+    let y = -total / 2;
+
+    idx.forEach((i, k) => {
+      const h = heights[k], w = widths[k], by = y + h / 2;
+      const x0 = dir * rootW / 2, x1 = dir * brIn, mx = (x0 + x1) / 2;
+      edges.push(`<path class="edge root b${i % 10}" d="M${x0},0 C${mx},0 ${mx},${by} ${x1},${by}"/>`);
+      const bx = dir > 0 ? brIn : -brIn - w, isC = collapsed.has(i);
+      nodes.push(`<g class="branch b${i % 10}" data-b="${i}" tabindex="0" role="button" aria-expanded="${!isC}" aria-label="${esc(B[i].name)}, ${counts[k]} 완료, ${isC ? '펼치기' : '접기'}">` +
+        `<rect x="${bx}" y="${by - BR_H / 2}" width="${w}" height="${BR_H}" rx="${BR_H / 2}"/>` +
+        `<text x="${bx + w / 2}" y="${by}" text-anchor="middle">${esc(B[i].name)}<tspan class="cnt" dx="8">${counts[k]}</tspan></text>` +
+        (isC ? `<text class="more" x="${dir * (brIn + w + 10)}" y="${by}" text-anchor="${anchor(dir)}">펼치기</text>` : '') + `</g>`);
+      grow(dir, brIn + w + (isC ? 60 : 0));
+
+      if (!isC) {
+        const ox = dir * (brIn + w), gx = dir * gIn, gm = (ox + gx) / 2;
+        let gy0 = y;
+        B[i].groups.forEach((gr, g) => {
+          const gh = groupH(i, g), gy = gy0 + gh / 2, open = expanded.has(i + '-' + g);
+          const [d, n] = groupCount(i, g), full = d === n;
+          const cnt = `${d}/${n}`;
+          const gw = measure(gr.name, '600 13.5px') + 8 + measure(cnt, '500 11px', MONO) + 44;
+          edges.push(`<path class="edge b${i % 10}" d="M${ox},${by} C${gm},${by} ${gm},${gy} ${gx},${gy}"/>`);
+          const rx = dir > 0 ? gIn : -gIn - gw;
+          const arrowX = dir * (gIn + 14), txX = dir * (gIn + 26);
+          const sym = open ? (dir > 0 ? '◂' : '▸') : (dir > 0 ? '▸' : '◂');
+          nodes.push(`<g class="group b${i % 10}${open ? ' open' : ''}${full ? ' full' : ''}" data-b="${i}" data-g="${g}" tabindex="0" role="button" aria-expanded="${open}" aria-label="${esc(gr.name)}, ${cnt} 완료">` +
+            `<rect x="${rx}" y="${gy - G_H / 2}" width="${gw}" height="${G_H}" rx="7"/>` +
+            `<text class="arrow" x="${arrowX}" y="${gy}" text-anchor="middle">${full ? '✓' : sym}</text>` +
+            `<text x="${txX}" y="${gy}" text-anchor="${anchor(dir)}">${dir > 0 ? `${esc(gr.name)}<tspan class="cnt" dx="8">${cnt}</tspan>` : `<tspan class="cnt">${cnt}</tspan><tspan dx="8">${esc(gr.name)}</tspan>`}</text></g>`);
+          grow(dir, gIn + gw);
+
+          if (open) {
+            const n2 = gr.items.length, cx = dir * (gIn + gw), cIn = gIn + gw + 40, cm = (cx + dir * cIn) / 2;
+            gr.items.forEach((it, c) => {
+              const cy = gy - n2 * CROW / 2 + c * CROW + CROW / 2;
+              const dd = isDone(i, g, c), on = same(sel, [i, g, c]);
+              const tagW = it.deep ? measure('심화', '500 10px', MONO) + 8 : 0;
+              const cw = measure(it.t, '400 12.5px') + tagW + 40;
+              edges.push(`<path class="edge c b${i % 10}" d="M${cx},${gy} C${cm},${gy} ${cm},${cy} ${dir * cIn},${cy}"/>`);
+              const crx = dir > 0 ? cIn : -cIn - cw;
+              const dotX = dir * (cIn + 14), tx = dir * (cIn + 26);
+              const label = dir > 0
+                ? `${esc(it.t)}${it.deep ? '<tspan class="deep" dx="6">심화</tspan>' : ''}`
+                : `${it.deep ? '<tspan class="deep">심화</tspan><tspan dx="6">' : '<tspan>'}${esc(it.t)}</tspan>`;
+              nodes.push(`<g class="concept b${i % 10}${dd ? ' done' : ''}${on ? ' on' : ''}" data-b="${i}" data-g="${g}" data-c="${c}" tabindex="0" role="button" aria-label="${esc(it.t)}${it.deep ? ', 심화' : ''}${dd ? ', 완료' : ''}">` +
+                `<rect x="${crx}" y="${cy - C_H / 2}" width="${cw}" height="${C_H}" rx="6"/>${mark(dotX, cy, dd, 3)}` +
+                `<text x="${tx}" y="${cy}" text-anchor="${anchor(dir)}">${label}</text></g>`);
+              grow(dir, cIn + cw);
+            });
+          }
+          gy0 += gh;
+        });
+
+        const my = gy0 + ROW / 2, md = isDone(i, -1, -1), mon = same(sel, [i, -1, -1]);
+        const mlabel = `${MUST_TITLE} · ${B[i].must.length}`;
+        const mw = measure(mlabel, '700 13px') + 40;
+        edges.push(`<path class="edge b${i % 10}" d="M${ox},${by} C${gm},${by} ${gm},${my} ${gx},${my}"/>`);
+        nodes.push(`<g class="must b${i % 10}${md ? ' done' : ''}${mon ? ' on' : ''}" data-b="${i}" data-g="-1" data-c="-1" tabindex="0" role="button" aria-label="${esc(B[i].name)} ${MUST_TITLE}${md ? ', 완료' : ''}">` +
+          `<rect x="${dir > 0 ? gIn : -gIn - mw}" y="${my - G_H / 2}" width="${mw}" height="${G_H}" rx="7"/>${mark(dir * (gIn + 14), my, md)}` +
+          `<text x="${dir * (gIn + 26)}" y="${my}" text-anchor="${anchor(dir)}">${mlabel}</text></g>`);
+        grow(dir, gIn + mw);
+      }
+      y += h + GAP;
+    });
+  });
+
+  const rootNode = `<g class="root-node"><rect x="${-rootW / 2}" y="-24" width="${rootW}" height="48" rx="24"/><text x="0" y="0" text-anchor="middle">${esc(ROOT)}</text></g>`;
+  const pad = 24, vx = minX - pad, vy = -maxH / 2 - pad, vw = maxX - minX + pad * 2, vh = maxH + pad * 2;
+  svg.setAttribute('viewBox', `${vx} ${vy} ${vw} ${vh}`);
+  svg.setAttribute('width', Math.ceil(vw));
+  svg.setAttribute('height', Math.ceil(vh));
+  svg.innerHTML = edges.join('') + nodes.join('') + rootNode;
+}
+function centerScroll() { box.scrollLeft = (box.scrollWidth - box.clientWidth) / 2; }
+
+// 설명 카드
+function fillPanel() {
+  if (!sel) return;
+  const [i, g, c] = sel, isM = g < 0;
+  panel.className = 'panel b' + (i % 10);
+  const it = isM ? null : itemOf(i, g, c);
+  document.getElementById('pCat').innerHTML = isM
+    ? esc(B[i].name)
+    : `${esc(B[i].name)} › ${esc(B[i].groups[g].name)}${it.deep ? '<span class="tag">심화</span>' : ''}`;
+  document.getElementById('pTitle').textContent = isM ? `${B[i].name}에서 ${MUST_TITLE}` : it.t;
+  const tabBar = document.getElementById('pTabs');
+  if (isM) {
+    tabBar.hidden = true;
+    document.getElementById('pBody').innerHTML = mustHtml(i);
+  } else {
+    const parts = docParts(it, B[i].groups[g], { rels: true });
+    tabBar.hidden = false;
+    tabBar.querySelectorAll('button').forEach(b => {
+      b.hidden = !parts[b.dataset.tab];
+      b.setAttribute('aria-selected', b.dataset.tab === curTab);
+    });
+    if (!parts[curTab]) curTab = 'concept';
+    document.getElementById('pBody').innerHTML = parts[curTab];
+  }
+  const d = isDone(i, g, c), btn = document.getElementById('pDone');
+  btn.setAttribute('aria-pressed', d);
+  btn.textContent = d ? '✓ 학습 완료 (누르면 취소)' : '학습 완료로 표시';
+  const k = flat.findIndex(f => same(f, sel));
+  document.getElementById('pPos').textContent = `${k + 1} / ${flat.length}`;
+  panel.hidden = false;
+  panel.scrollTop = 0;
+}
+function select(i, g, c) {
+  sel = [i, g, c];
+  collapsed.delete(i);
+  if (g >= 0) expanded.add(i + '-' + g);
+  render();
+  fillPanel();
+}
+function step(d) {
+  const k = flat.findIndex(f => same(f, sel));
+  const n = flat[(k + d + flat.length) % flat.length];
+  select(...n);
+}
+document.getElementById('pBody').addEventListener('click', e => {
+  const r = e.target.closest('[data-rel]'); if (!r) return;
+  const [key, ...pos] = r.dataset.rel.split(',');
+  if (key !== cur) useMap(key);
+  select(...pos.map(Number));
+});
+let curTab = quiz ? 'interview' : 'concept';
+document.getElementById('pTabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]'); if (!b) return;
+  curTab = b.dataset.tab;
+  fillPanel();
+  b.focus();
+});
+function quizLabels() {
+  document.querySelectorAll('.quiz-toggle').forEach(b => {
+    b.setAttribute('aria-pressed', quiz);
+    b.textContent = quiz ? '자기 점검 켜짐' : '자기 점검 모드';
+  });
+}
+function setQuiz(on) {
+  quiz = on;
+  try { localStorage.setItem('mindmap-quiz', on ? '1' : '0'); } catch (e) {}
+  quizLabels();
+  if (on) curTab = 'interview';
+  if (sel) fillPanel();
+  renderNotes();
+}
+document.querySelectorAll('.quiz-toggle').forEach(b => b.addEventListener('click', () => setQuiz(!quiz)));
+quizLabels();
+
+function toggleDone(i, g, c) {
+  const id = idOf(cur, i, g, c);
+  done.has(id) ? done.delete(id) : done.add(id);
+  save();
+  render();
+  if (sel) fillPanel();
+  renderDash();
+  syncNote(i, g, c);
+}
+
+function activate(el) {
+  const i = +el.dataset.b, g = +el.dataset.g, c = +el.dataset.c;
+  let focusSel;
+  if (el.classList.contains('branch')) {
+    collapsed.has(i) ? collapsed.delete(i) : collapsed.add(i);
+    render();
+    focusSel = `.branch[data-b="${i}"]`;
+  } else if (el.classList.contains('group')) {
+    const key = i + '-' + g;
+    expanded.has(key) ? expanded.delete(key) : expanded.add(key);
+    render();
+    focusSel = `.group[data-b="${i}"][data-g="${g}"]`;
+  } else {
+    select(i, g, c);
+    focusSel = `[data-b="${i}"][data-g="${g}"][data-c="${c}"]`;
+  }
+  const again = svg.querySelector(focusSel);
+  if (again) again.focus({ preventScroll: true });
+}
+svg.addEventListener('click', e => { const el = e.target.closest('g[data-b]'); if (el) activate(el); });
+svg.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest('g[data-b]');
+  if (el) { e.preventDefault(); activate(el); }
+});
+
+document.getElementById('pClose').onclick = () => { panel.hidden = true; sel = null; render(); };
+document.getElementById('pPrev').onclick = () => step(-1);
+document.getElementById('pNext').onclick = () => step(1);
+document.getElementById('pDone').onclick = () => { if (sel) toggleDone(...sel); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panel.hidden) document.getElementById('pClose').click(); });
+document.getElementById('expandAll').onclick = () => { collapsed.clear(); render(); centerScroll(); };
+document.getElementById('detailAll').onclick = () => {
+  collapsed.clear();
+  B.forEach((b, i) => b.groups.forEach((_, g) => expanded.add(i + '-' + g)));
+  render(); centerScroll();
+};
+document.getElementById('collapseAll').onclick = () => { expanded.clear(); B.forEach((_, i) => collapsed.add(i)); render(); centerScroll(); };
+
+// 학습 현황
+function stats(key) {
+  const bs = MAPS[key].branches;
+  const s = { total: 0, done: 0, cTotal: 0, cDone: 0, dTotal: 0, dDone: 0, mTotal: bs.length, mDone: 0, topics: [] };
+  bs.forEach((b, i) => {
+    let n = 0, d = 0;
+    eachNode(bs, i, (g, c) => {
+      const ok = done.has(idOf(key, i, g, c));
+      n++; if (ok) d++;
+      if (g < 0) { if (ok) s.mDone++; return; }
+      s.cTotal++; if (ok) s.cDone++;
+      if (b.groups[g].items[c].deep) { s.dTotal++; if (ok) s.dDone++; }
+    });
+    s.total += n; s.done += d;
+    s.topics.push({ i, name: b.name, total: n, done: d });
+  });
+  return s;
+}
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const barHtml = p => `<div class="bar"><i style="width:${p}%"></i></div>`;
+function renderDash() {
+  const keys = Object.keys(MAPS), st = {};
+  keys.forEach(k => { st[k] = stats(k); });
+  const sum = f => keys.reduce((a, k) => a + st[k][f], 0);
+  const op = pct(sum('done'), sum('total'));
+  document.getElementById('ovPct').innerHTML = `${op}<small>%</small>`;
+  document.querySelector('#ovBar > i').style.width = op + '%';
+  document.getElementById('ovSub').textContent =
+    `${sum('done')} / ${sum('total')}개 완료 · 개념 ${sum('cDone')}/${sum('cTotal')} · 심화 ${sum('dDone')}/${sum('dTotal')} · ${MUST_TITLE} ${sum('mDone')}/${sum('mTotal')}`;
+
+  keys.forEach(key => {
+    const s = st[key], p = pct(s.done, s.total), full = s.topics.filter(t => t.done === t.total).length;
+    const el = document.getElementById('card-' + key);
+    el.setAttribute('aria-pressed', key === cur);
+    el.innerHTML = `<span class="row"><span class="name">${MAPS[key].title}</span><span class="pct num">${p}%</span></span>` +
+      barHtml(p) +
+      `<span class="sub-line num">개념 ${s.cDone}/${s.cTotal} · 심화 ${s.dDone}/${s.dTotal}</span>` +
+      `<span class="sub-line num">${MUST_TITLE} ${s.mDone}/${s.mTotal} · 끝낸 주제 ${full}/${s.topics.length}</span>`;
+  });
+
+  const s = st[cur];
+  document.getElementById('topicsTitle').textContent = `${MAPS[cur].title} 주제별 진도`;
+  document.getElementById('topics').innerHTML = s.topics.map(t => {
+    const p = pct(t.done, t.total), full = t.done === t.total;
+    return `<button type="button" class="topic-row b${t.i % 10}${full ? ' full' : ''}" data-b="${t.i}" title="${esc(t.name)}: ${t.done}/${t.total} 완료 (${p}%)">` +
+      `<span class="dot"></span><span class="tname">${esc(t.name)}</span><span class="cnt num">${full ? '✓ ' : ''}${t.done}/${t.total}</span>${barHtml(p)}</button>`;
+  }).join('');
+
+  // 심화 개념을 먼저 추천하고, 나머지는 순서대로
+  const left = flat.filter(f => !isDone(...f));
+  const deepFirst = left.filter(([i, g, c]) => g >= 0 && itemOf(i, g, c).deep).concat(left.filter(([i, g, c]) => g < 0 || !itemOf(i, g, c).deep));
+  const next = deepFirst.slice(0, 5);
+  document.getElementById('nextList').innerHTML = next.length
+    ? next.map(([i, g, c]) => {
+        const it = g >= 0 ? itemOf(i, g, c) : null;
+        return `<li><button type="button" class="b${i % 10}" data-sel="${i},${g},${c}"><span class="dot"></span>` +
+          `<span class="t">${esc(it ? it.t : `${B[i].name}에서 ${MUST_TITLE}`)}<small>${esc(B[i].name)}${it ? ' › ' + esc(B[i].groups[g].name) : ''}</small></span>` +
+          `${it && it.deep ? '<span class="tag">심화</span>' : '<span></span>'}</button></li>`;
+      }).join('')
+    : `<li><p class="empty">${MAPS[cur].title}의 모든 항목을 완료했습니다.</p></li>`;
+}
+document.getElementById('topics').addEventListener('click', e => {
+  const r = e.target.closest('.topic-row'); if (!r) return;
+  collapsed.delete(+r.dataset.b);
+  render();
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+document.getElementById('nextList').addEventListener('click', e => {
+  const b = e.target.closest('[data-sel]'); if (b) select(...b.dataset.sel.split(',').map(Number));
+});
+document.querySelectorAll('.mapcard').forEach(c => c.addEventListener('click', () => useMap(c.dataset.map)));
+const ask = document.getElementById('resetAsk'), confirmBox = document.getElementById('resetConfirm');
+ask.onclick = () => { ask.hidden = true; confirmBox.hidden = false; };
+document.getElementById('resetNo').onclick = () => { confirmBox.hidden = true; ask.hidden = false; };
+document.getElementById('resetYes').onclick = () => {
+  done.clear(); save();
+  confirmBox.hidden = true; ask.hidden = false;
+  render(); if (sel) fillPanel(); renderDash(); renderNotes();
+};
+
+// 전체 노트
+function noteItem(i, g, c) {
+  const d = isDone(i, g, c), box = `note-${i}-${g}-${c}`, chk = `chk-${cur}-${i}-${g}-${c}`;
+  const attrs = `id="${chk}" data-sel="${i},${g},${c}"${d ? ' checked' : ''}`;
+  if (g < 0) {
+    return `<div class="must-box${d ? ' done' : ''}" id="${box}"><label class="check"><input type="checkbox" ${attrs}>${MUST_TITLE}</label><div class="doc">${mustHtml(i)}</div></div>`;
+  }
+  const it = itemOf(i, g, c), p = docParts(it, B[i].groups[g], { cmp: false });
+  return `<div class="item${d ? ' done' : ''}" id="${box}"><label class="check"><input type="checkbox" ${attrs}>${esc(it.t)}${it.deep ? '<span class="tag">심화</span>' : ''}</label>` +
+    `<div class="doc">${p.concept}</div>` +
+    (p.practice ? `<details class="more"><summary>코드 · 실무</summary><div class="doc">${p.practice}</div></details>` : '') +
+    (p.interview ? `<details class="more"><summary>면접</summary><div class="doc">${p.interview}</div></details>` : '') + `</div>`;
+}
+function renderNotes() {
+  document.getElementById('notes').innerHTML = B.map((b, i) => {
+    const [d, n] = branchCount(i);
+    return `<article class="topic b${i % 10}"><h3>${esc(b.name)}<span class="num" id="ncnt-${i}">${d}/${n} 완료</span></h3>` +
+      b.groups.map((gr, g) => `<div class="grp"><h4>${esc(gr.name)}</h4>${gr.cmp ? `<div class="doc">${cmpHtml(gr.cmp, '')}</div>` : ''}<div class="items">${gr.items.map((_, c) => noteItem(i, g, c)).join('')}</div></div>`).join('') +
+      noteItem(i, -1, -1) + `</article>`;
+  }).join('');
+}
+function syncNote(i, g, c) {
+  const el = document.getElementById(`note-${i}-${g}-${c}`), chk = document.getElementById(`chk-${cur}-${i}-${g}-${c}`);
+  if (el) el.classList.toggle('done', isDone(i, g, c));
+  if (chk) chk.checked = isDone(i, g, c);
+  const cnt = document.getElementById('ncnt-' + i);
+  if (cnt) { const [d, n] = branchCount(i); cnt.textContent = `${d}/${n} 완료`; }
+}
+document.getElementById('notes').addEventListener('change', e => {
+  const c = e.target.closest('input[data-sel]'); if (c) toggleDone(...c.dataset.sel.split(',').map(Number));
+});
+
+// 탭 전환
+const tabs = document.querySelectorAll('.tabs button');
+function useMap(key) {
+  cur = key;
+  ({ root: ROOT, branches: B } = MAPS[key]);
+  flat = [];
+  B.forEach((b, i) => eachNode(B, i, (g, c) => flat.push([i, g, c])));
+  collapsed.clear(); expanded.clear();
+  sel = null;
+  panel.hidden = true;
+  tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.map === key));
+  svg.setAttribute('aria-label', `${ROOT} 마인드맵`);
+  const groups = B.reduce((s, b) => s + b.groups.length, 0), conc = flat.length - B.length;
+  const deep = flat.filter(([i, g, c]) => g >= 0 && itemOf(i, g, c).deep).length;
+  document.getElementById('stat').textContent = `${B.length}개 주제 · ${groups}개 묶음 · ${conc}개 개념 (심화 ${deep})`;
+  render();
+  centerScroll();
+  renderDash();
+  renderNotes();
+  try { localStorage.setItem('mindmap-tab', key); } catch (e) {}
+}
+tabs.forEach(t => t.addEventListener('click', () => useMap(t.dataset.map)));
+
+let start = 'spring';
+try { if (MAPS[localStorage.getItem('mindmap-tab')]) start = localStorage.getItem('mindmap-tab'); } catch (e) {}
+useMap(start);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { render(); centerScroll(); });
+</script>
+
+</body></html>
