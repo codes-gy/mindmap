@@ -8,6 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: base },
     ...tabs().flatMap(t => [
       { url: `${base}/${t.key}` },
+      { url: `${base}/notes/${t.key}` },
       ...t.topics.flatMap(tp => tp.groups.flatMap(g => g.concepts.map(c => ({ url: `${base}/${t.key}/${c.slug}` })))),
     ]),
   ];
