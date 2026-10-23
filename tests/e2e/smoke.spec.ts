@@ -77,6 +77,19 @@ test('다른 탭의 관련 개념으로 이동한다', async ({ page }) => {
   await expect(page.locator('article.concept-page h2')).toHaveText('서킷 브레이커');
 });
 
+test('탭 화면에는 개념 목록만 있고, 전체 노트는 따로 열린다', async ({ page }) => {
+  await page.goto('/net');
+  await expect(page.locator('.notes.compact .item').first()).toBeVisible();
+  await expect(page.locator('.notes .item .doc')).toHaveCount(0);
+  await page.getByRole('link', { name: /전체 노트 보기/ }).click();
+  await expect(page).toHaveURL(/\/notes\/net$/);
+  await expect(page.locator('.notes-head h2')).toHaveText('네트워크 전체 노트');
+  await expect(page.locator('.notes .item .doc').first()).toBeVisible();
+  await page.getByRole('link', { name: 'TCP 카드로 열기', exact: true }).click();
+  await expect(page).toHaveURL(/\/net\/tcp$/);
+  await expect(page.locator('article.concept-page h2')).toHaveText('TCP');
+});
+
 test('검색', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('searchbox').fill('트랜잭션 격리');
