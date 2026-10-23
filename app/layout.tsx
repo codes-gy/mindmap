@@ -3,7 +3,8 @@ import { IBM_Plex_Mono, IBM_Plex_Sans_KR } from 'next/font/google';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
 
-const sans = IBM_Plex_Sans_KR({ weight: ['400', '500', '600', '700'], subsets: ['latin'], variable: '--font-sans', preload: false });
+// 한글 글꼴은 글자 범위마다 파일이 나뉘어 굵기 하나에 수십 개를 받으므로 400 · 600만 쓴다
+const sans = IBM_Plex_Sans_KR({ weight: ['400', '600'], subsets: ['latin'], variable: '--font-sans', preload: false });
 const mono = IBM_Plex_Mono({ weight: ['400', '500'], subsets: ['latin'], variable: '--font-mono' });
 
 export const metadata: Metadata = {

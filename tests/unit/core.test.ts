@@ -27,7 +27,7 @@ describe('v1 기록 이전', () => {
 });
 
 describe('search', () => {
-  const e = (title: string, def = ''): SearchEntry => ({ href: `/x/${title}`, title, tab: 'x', path: 'x', def, deep: false, color: 0, extra: '' });
+  const e = (title: string, def = ''): SearchEntry => ({ href: `/x/${title}`, title, path: 'x', def, deep: false, color: 0, extra: '' });
   it('제목 일치를 본문 일치보다 앞에 둔다', () => {
     const r = search([e('UDP', 'TCP와 달리'), e('TCP')], 'tcp');
     expect(r.map(x => x.title)).toEqual(['TCP', 'UDP']);
