@@ -105,7 +105,7 @@ export function Dashboard({ tabs, current }: { tabs: SkeletonTab[]; current: str
               {next.length
                 ? next.map(x => (
                     <li key={x.id}>
-                      <Link href={x.href} className={`b${x.i % 10}`} scroll={false}>
+                      <Link href={x.href} className={`b${x.i % 10}`} scroll={false} prefetch>
                         <span className="dot" /><span className="t">{x.title}<small>{x.sub}</small></span>
                         {x.deep ? <span className="tag">심화</span> : <span />}
                       </Link>

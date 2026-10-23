@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+// router.prefetch의 kind는 문서에 없지만 <Link prefetch={true}>가 쓰는 것과 같은 값이다
+import { PrefetchKind } from 'next/dist/client/components/router-reducer/router-reducer-types';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { SkeletonTab } from '@/lib/content';
 import { useProgress } from '@/lib/progress/store';
@@ -71,9 +73,16 @@ export function MindMap({ tab, tabs }: { tab: SkeletonTab; tabs: { key: string; 
     return `${tab.topics.length}개 주제 · ${groups}개 묶음 · ${concepts.length}개 개념 (심화 ${concepts.filter(c => c.deep).length})`;
   }, [tab]);
 
+  // 기본 프리페치는 라우트 공통 껍데기만 받으므로, 카드 본문까지 미리 받으려면 full로 요청한다
+  const warm = (slug: string) => router.prefetch(`/${tab.key}/${slug}`, { kind: PrefetchKind.FULL });
+
   function activate(n: MapNode) {
     if (n.kind === 'branch') mapActions.toggleTopic(tab.key, n.b);
-    else if (n.kind === 'group') mapActions.toggleGroup(tab.key, `${n.b}-${n.g}`);
+    else if (n.kind === 'group') {
+      // 묶음을 펼치면 곧 그 안의 개념을 누를 테니 카드를 미리 받아 둔다 (마우스를 올릴 수 없는 휴대폰을 위해)
+      if (!n.open) tab.topics[n.b].groups[n.g].concepts.forEach(c => warm(c.slug));
+      mapActions.toggleGroup(tab.key, `${n.b}-${n.g}`);
+    }
     else if (n.kind === 'concept' || n.kind === 'must') { router.push(`/${tab.key}/${n.slug}`, { scroll: false }); return; }
     else return;
     // 다시 그린 뒤에도 같은 노드에 포커스를 둔다
@@ -103,7 +112,7 @@ export function MindMap({ tab, tabs }: { tab: SkeletonTab; tabs: { key: string; 
               if (el) { e.preventDefault(); activate(map.nodes[+el.dataset.i!]); }
             }}>
             {map.edges.map((e, k) => <path key={k} className={`edge b${e.b % 10}${e.level === 'root' ? ' root' : e.level === 'concept' ? ' c' : ''}`} d={e.d} />)}
-            {map.nodes.map((n, k) => <Node key={k} n={n} i={k} onActivate={() => activate(n)} />)}
+            {map.nodes.map((n, k) => <Node key={k} n={n} i={k} onActivate={() => activate(n)} onWarm={n.kind === 'concept' || n.kind === 'must' ? () => warm(n.slug) : undefined} />)}
           </svg>
         )}
       </div>
@@ -111,9 +120,10 @@ export function MindMap({ tab, tabs }: { tab: SkeletonTab; tabs: { key: string; 
   );
 }
 
-function Node({ n, i, onActivate }: { n: MapNode; i: number; onActivate: () => void }) {
+function Node({ n, i, onActivate, onWarm }: { n: MapNode; i: number; onActivate: () => void; onWarm?: () => void }) {
   const { x, y, w, h } = n.box, cy = y + h / 2;
-  const common = { 'data-i': i, tabIndex: 0, role: 'button' as const, onClick: onActivate };
+  // 개념은 누르기 직전(마우스를 올리거나 포커스를 받거나 누르기 시작할 때) 카드를 미리 받는다
+  const common = { 'data-i': i, tabIndex: 0, role: 'button' as const, onClick: onActivate, onPointerEnter: onWarm, onFocus: onWarm, onPointerDown: onWarm };
   const anchor = (dir: number) => dir > 0 ? 'start' : 'end';
 
   switch (n.kind) {
