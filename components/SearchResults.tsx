@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { search, type SearchEntry } from '@/lib/search';
+import { search, SEARCH_INDEX_URL, type SearchEntry } from '@/lib/search';
 
 function Highlight({ text, words }: { text: string; words: string[] }) {
   if (!words.length) return <>{text}</>;
@@ -14,7 +14,7 @@ function Highlight({ text, words }: { text: string; words: string[] }) {
 export function SearchResults() {
   const q = useSearchParams().get('q') ?? '';
   const [entries, setEntries] = useState<SearchEntry[] | null>(null);
-  useEffect(() => { fetch('/search-index.json').then(r => r.json()).then(setEntries).catch(() => setEntries([])); }, []);
+  useEffect(() => { fetch(SEARCH_INDEX_URL).then(r => r.json()).then(setEntries).catch(() => setEntries([])); }, []);
   const results = useMemo(() => entries ? search(entries, q) : [], [entries, q]);
   const words = q.trim().split(/\s+/).filter(Boolean);
 

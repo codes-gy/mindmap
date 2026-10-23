@@ -1,7 +1,9 @@
 // 검색: 공백으로 나눈 낱말이 모두 들어 있는 항목을 찾고, 제목에 있을수록 앞에 둔다
 export interface SearchEntry {
-  href: string; title: string; tab: string; path: string; def: string; deep: boolean; color: number; extra: string;
+  href: string; title: string; path: string; def: string; deep: boolean; color: number; extra: string;
 }
+
+export const SEARCH_INDEX_URL = '/search-index.json';
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ');
 

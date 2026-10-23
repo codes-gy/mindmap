@@ -48,8 +48,10 @@ body {
 
 header { display: flex; flex-direction: column; gap: 10px; max-width: 70ch; }
 .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0; }
-h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 0; font-weight: 700; text-wrap: balance; letter-spacing: -.01em; }
+h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 0; font-weight: 600; text-wrap: balance; letter-spacing: -.01em; }
 h2, h3 { text-wrap: balance; }
+/* 본문 글꼴은 400 · 600 두 굵기만 불러오므로, 브라우저 기본 굵게(700)도 600으로 맞춘다 */
+h2, h3, h4, h5, h6, th, b, strong { font-weight: 600; }
 .lead { margin: 0; color: var(--muted); }
 
 button {
@@ -83,7 +85,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .sub-line { font-size: 13px; color: var(--muted); margin: 0; }
 .mapcard { cursor: pointer; font-size: 15px; }
 .mapcard .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.mapcard .name { font-weight: 700; font-size: 17px; }
+.mapcard .name { font-weight: 600; font-size: 17px; }
 .mapcard .pct { font-size: 22px; font-weight: 600; }
 .mapcard[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
 .dash-bottom { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
@@ -122,7 +124,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .edge.root { stroke-width: 3; stroke-opacity: .7; }
 .edge.c { stroke-opacity: .35; stroke-width: 1.2; }
 .root-node rect { fill: var(--ink); }
-.root-node text { fill: var(--bg); font-size: 20px; font-weight: 700; }
+.root-node text { fill: var(--bg); font-size: 20px; font-weight: 600; }
 .branch, .group, .concept, .must { cursor: pointer; }
 .branch rect { fill: var(--bc); }
 .branch text { fill: var(--on-branch); font-size: 14px; font-weight: 600; }
@@ -145,7 +147,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .tick { fill: none; stroke: var(--on-branch); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .must rect { fill: color-mix(in srgb, var(--bc) 14%, var(--surface)); stroke: var(--bc); stroke-dasharray: 4 3; }
 .must circle { fill: var(--bc); }
-.must text { fill: var(--bc); font-size: 13px; font-weight: 700; }
+.must text { fill: var(--bc); font-size: 13px; font-weight: 600; }
 .on rect { stroke: var(--bc); stroke-width: 2; stroke-dasharray: none; }
 .map-box svg g:focus { outline: none; }
 .map-box svg g:focus-visible rect { stroke: var(--ink); stroke-width: 2.5; }
@@ -186,7 +188,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .doc .warn ul li::marker { content: "! "; color: var(--c3); font-family: var(--mono); font-weight: 600; }
 .doc .qa { background: var(--bg); border-radius: 8px; padding: 12px 14px; gap: 8px; }
 .doc .qa .qtext { font-weight: 600; }
-.doc details summary { cursor: pointer; color: var(--bc); font-size: 13.5px; font-weight: 500; }
+.doc details summary { cursor: pointer; color: var(--bc); font-size: 13.5px; font-weight: 400; }
 .doc details[open] summary { margin-bottom: 6px; }
 .rels { display: flex; flex-wrap: wrap; gap: 6px; }
 .rels button { font-size: 12.5px; padding: 3px 10px; border-radius: 999px; }
@@ -194,7 +196,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .ptabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); margin-top: -4px; }
 .ptabs button { border: none; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 6px 10px; color: var(--muted); font-weight: 600; }
 .ptabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--bc); }
-.ptabs .quiz-toggle { margin-left: auto; font-size: 12.5px; font-weight: 500; }
+.ptabs .quiz-toggle { margin-left: auto; font-size: 12.5px; font-weight: 400; }
 .quiz-toggle[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .ptabs .quiz-toggle[aria-pressed="true"] { border-radius: 6px; }
 .doc .ana p { font-style: italic; }
@@ -218,7 +220,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .myth .f::before { content: "사실 "; font-family: var(--mono); font-size: 11px; color: var(--accent); }
 .fq { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
 .fq li::marker { color: var(--bc); font-family: var(--mono); }
-.reveal summary { cursor: pointer; color: var(--bc); font-size: 13px; font-weight: 500; }
+.reveal summary { cursor: pointer; color: var(--bc); font-size: 13px; font-weight: 400; }
 .reveal[open] summary { margin-bottom: 4px; }
 .item details.more { border-top: 1px solid var(--line); padding-top: 8px; }
 .item details.more > summary { cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--bc); }
@@ -240,7 +242,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--code-bg); b
 .items { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; align-items: start; }
 .item { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
 .item.done { border-color: color-mix(in srgb, var(--bc) 45%, var(--surface)); background: color-mix(in srgb, var(--bc) 5%, var(--surface)); }
-.check { display: flex; align-items: flex-start; gap: 10px; font-weight: 700; font-size: 16px; cursor: pointer; }
+.check { display: flex; align-items: flex-start; gap: 10px; font-weight: 600; font-size: 16px; cursor: pointer; }
 .check input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--bc); flex: none; }
 .check .tag { margin-left: auto; font-weight: 500; }
 .item .doc { font-size: 14px; }
