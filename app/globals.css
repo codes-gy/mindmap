@@ -298,6 +298,11 @@ a.mapcard { padding: 18px 20px; font-size: 15px; }
 .item-head .check { flex: 1; }
 .permalink { font-size: 12px; padding: 2px 8px; color: var(--muted); }
 
+/* 탭 화면의 개념 목록: 설명 없이 제목만 */
+.notes.compact .items { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+.notes.compact .item { padding: 8px 12px; }
+.notes.compact .check { font-size: 14.5px; }
+
 /* 개념 단독 페이지 */
 .concept-page {
   background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--bc);
@@ -330,3 +335,5 @@ a.mapcard { padding: 18px 20px; font-size: 15px; }
   .concept-page { padding: 18px 16px; }
   .search-box { flex-basis: 100%; }
 }
+.back { margin: 16px 0 0; font-size: 14px; }
+.back a { color: var(--muted); }
