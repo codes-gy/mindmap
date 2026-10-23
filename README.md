@@ -26,66 +26,102 @@
 - **자기 점검 모드:** 답변을 가려 두고 눌러야 보이게 합니다.
 - **학습 현황:** 개념별 완료 체크, 탭·주제별 진도, 다음에 볼 개념을 추천합니다.
 - **전체 노트:** 현재 탭의 모든 개념을 한 페이지로 훑어봅니다.
+- **개념별 주소:** `/net/tcp`처럼 개념마다 주소가 있어 링크로 공유할 수 있습니다.
+- **검색:** 개념 이름, 정의, 면접 질문으로 검색합니다.
 
 > 완료 기록과 설정은 보는 사람의 브라우저(localStorage)에만 저장됩니다. 다른 기기나 브라우저와는 공유되지 않습니다.
+
+## 기술 스택
+
+Next.js 16 (App Router, Cache Components) · React 19 · TypeScript · Vitest · Playwright
+
+- 개념 페이지 900여 개를 빌드할 때 정적으로 만들어 둡니다. 개념마다 고유 주소(`/net/tcp`)가 있어 링크로 공유하거나 검색 엔진에 노출할 수 있습니다.
+- 마인드맵에서 개념을 누르면 지금 화면 위에 설명 카드가 뜨고 주소도 바뀝니다(parallel + intercepting routes). 그 주소로 바로 들어오면 단독 개념 페이지가 열립니다.
+- 브라우저에는 탭의 제목 뼈대만 보내고, 개념 본문은 서버에서 HTML로 그려 보냅니다.
 
 ## 구조
 
 ```
-index.html          화면, 스타일, 마인드맵 렌더링 코드
-data/<탭>-<n>.js    주제 하나의 기본 데이터 (개념 정의, 원리, 코드, 면접 질문)
-data/x/<탭>-<n>.js  같은 주제의 확장 데이터 (30초 답변, 비유, 실무 사례, 꼬리 질문, 비교 표)
+app/
+  page.tsx                      대시보드
+  [tab]/layout.tsx              대시보드 + 마인드맵 (탭마다)
+  [tab]/page.tsx                전체 노트
+  [tab]/[slug]/page.tsx         개념 단독 페이지 (정적 생성, 메타데이터)
+  [tab]/@panel/(.)[slug]/       마인드맵 위 설명 카드 (가로챈 라우트)
+  search/page.tsx               검색
+  sitemap.ts, robots.ts
+components/
+  mindmap/layout.ts             마인드맵 배치 계산 (순수 함수)
+  mindmap/MindMap.tsx           SVG 렌더링과 조작
+  concept/                      설명 카드, 개념 본문, 완료 버튼
+  dashboard/Dashboard.tsx       학습 현황
+lib/
+  content.ts                    콘텐츠 조회와 클라이언트용 뼈대
+  view.ts                       슬러그 → 개념, 이전·다음 계산
+  progress/store.ts             완료 기록 저장소 (localStorage, 서버 동기화로 교체 가능한 인터페이스)
+  progress/migrate.ts           v1 정적 사이트의 완료 기록 이전
+content/
+  types.ts                      데이터 타입
+  index.ts                      탭과 주제 목록
+  <탭>/<탭>-<n>.ts              주제 하나
+scripts/
+  validate.ts                   콘텐츠 검사 (빌드 전 자동 실행)
+  build-search.ts               검색 인덱스 생성 (빌드 전 자동 실행)
+  convert.ts                    v1 데이터 변환 (한 번 쓰고 끝)
 ```
 
-탭 키는 `spring`, `cs`, `net`, `ds`, `algo`입니다. 번호는 0부터 19까지 쓸 수 있고 중간이 비어도 됩니다.
+탭 키는 `spring`, `cs`, `net`, `ds`, `algo`입니다.
 
 ### 개념 데이터 형식
 
-```js
-(window.MINDMAP = window.MINDMAP || {})['net-1'] = {
+```ts
+// content/net/net-1.ts
+const topic: Topic = {
+  key: 'net-1',                      // 파일 이름과 같게
   name: '주제 이름',
-  groups: [
-    { name: '묶음 이름', items: [
-      { t: '개념 이름', deep: true,           // deep: 심화 표시
-        d: '한 문장 정의',
-        why: '왜 필요한가',                    // 선택
-        how: ['설명 문단', '- 라벨: 목록 항목'], // `코드`는 백틱으로
-        code: `코드 예시`,                     // 선택
-        warn: ['주의할 점'],                   // 선택
-        qa: ['면접 질문', '모범 답변'],          // 선택
-        rel: ['관련 개념 이름'] }               // 다른 탭의 개념도 연결됨
-    ]}
-  ],
-  must: ['이 주제에서 알아둘 것']
+  must: ['이 주제에서 알아둘 것'],
+  groups: [{
+    name: '묶음 이름',
+    compare: { cols: ['기준', '개념 A', '개념 B'], rows: [['항목', '...', '...']] },  // 선택
+    concepts: [{
+      id: 'net/gaenyeom-ireum',        // `${탭}/${slug}`, 완료 기록의 키
+      slug: 'gaenyeom-ireum',          // 주소. 한 번 정하면 바꾸지 않는다
+      title: '개념 이름',
+      deep: true,                      // 심화 표시
+      def: '한 문장 정의',
+      how: ['설명 문단', '- 라벨: 목록 항목', '1) 단계'],  // `코드`는 백틱으로
+      code: '코드 예시', codeLang: 'java',
+      answer: '30초 답변', qa: ['면접 질문', '모범 답변'], followUps: [['꼬리 질문', '답']],
+      related: ['net/tcp', 'cs/seokit-beureikeo'],      // 다른 탭의 개념도 id로 연결
+      // 그 밖에 why, analogy, flow, use, warn, myth
+    }],
+  }],
 };
 ```
 
-확장 파일은 개념 이름(`t`)과 묶음 이름으로 기본 데이터에 합쳐집니다.
-
-```js
-(window.MINDMAP_X = window.MINDMAP_X || {})['net-1'] = {
-  groups: { '묶음 이름': { cmp: { cols: ['기준', '개념 A', '개념 B'], rows: [['항목', '...', '...']] } } },
-  items: { '개념 이름': { ans: '30초 답변', ana: '비유', use: ['실무 사례'], myth: [['오해', '사실']], fq: [['꼬리 질문', '답']], flow: ['단계1', '단계2'] } }
-};
-```
+필드 설명은 `content/types.ts`에 있습니다.
 
 ### 주제 추가하기
 
-1. `data/<탭>-<n>.js`와 `data/x/<탭>-<n>.js`를 만듭니다.
-2. `index.html`의 `<script src="data/...">` 목록에 두 파일을 추가합니다.
-3. 개념 이름(`t`)은 같은 탭 안에서 겹치지 않게 합니다. 완료 기록이 `탭|주제|묶음|개념` 이름으로 저장되기 때문입니다.
+1. `content/<탭>/<탭>-<n>.ts`를 만듭니다. 슬러그는 `lib/slug.ts`의 `slugify(제목)`으로 만들면 기존 규칙과 같아집니다.
+2. `content/index.ts`에 import를 추가하고 해당 탭의 `topics` 배열에 넣습니다.
+3. `npm run validate`로 검사합니다. id 중복, 같은 탭 안 제목 중복, 없는 관련 개념, 비교 표 칸 수를 확인합니다.
 
-> 주제나 묶음, 개념 이름을 바꾸면 그 개념의 기존 완료 기록이 사라집니다. 이름을 바꿔야 하면 `index.html`의 `MOVED` 목록에 이전 이름과 새 이름을 추가해 기록을 옮깁니다.
+> 완료 기록은 개념 `id`로 저장되므로 제목이나 주제를 바꿔도 기록이 유지됩니다. `id`와 `slug`만 바꾸지 않으면 됩니다.
 
-## 로컬 실행
+## 개발
 
 ```sh
-python3 -m http.server 8000
-# http://localhost:8000
+npm install
+npm run dev          # http://localhost:3000
+npm test             # 단위 테스트 (Vitest)
+npm run build        # 콘텐츠 검사 → 검색 인덱스 → 빌드
+npm run test:e2e     # 빌드 후 화면 테스트 (Playwright, 로컬 Chrome 사용)
 ```
-
-`index.html`을 파일로 바로 열어도 동작합니다.
 
 ## 배포
 
-빌드 과정 없는 정적 사이트입니다. Vercel에 이 저장소가 연결되어 있어서 `main`에 push하면 자동으로 다시 배포됩니다.
+Vercel에 이 저장소를 연결하면 `main`에 push할 때마다 자동으로 다시 배포됩니다. 빌드 설정은 기본값(Next.js)을 그대로 씁니다.
+사이트 주소를 sitemap과 메타데이터에 쓰려면 Vercel 환경 변수 `NEXT_PUBLIC_SITE_URL`을 설정합니다. 설정하지 않으면 Vercel 운영 도메인을 씁니다.
+
+빌드 과정 없는 v1 정적 사이트는 `v1-static` 태그에 남아 있습니다.
