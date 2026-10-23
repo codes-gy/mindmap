@@ -1,0 +1,82 @@
+<!doctype html>
+<!-- README 키 비주얼 원본. docs/keyvisual/render.mjs가 라이트·다크 PNG로 찍는다 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<style>
+  :root {
+    --bg: #F3F6F2; --surface: #FFFFFF; --ink: #17201A; --muted: #5B675F; --line: #D3DCD4;
+    --c0: #3D7A2A; --c1: #2B6B8C; --c2: #8248A0; --c3: #B0502A; --c4: #9A7020; --on: #FFFFFF;
+  }
+  :root[data-theme="dark"] {
+    --bg: #111612; --surface: #1A211C; --ink: #E4EBE5; --muted: #98A59C; --line: #2E3931;
+    --c0: #8BC46A; --c1: #6DB4D8; --c2: #C394DA; --c3: #E8916B; --c4: #DDB65E; --on: #111612;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { width: 1280px; height: 640px; background: var(--bg); color: var(--ink); font-family: "IBM Plex Sans KR", sans-serif; overflow: hidden; }
+  .frame { position: relative; width: 100%; height: 100%; display: flex; align-items: center; padding: 0 72px; }
+  .copy { position: relative; z-index: 1; width: 470px; display: flex; flex-direction: column; gap: 22px; }
+  .eyebrow { font-family: "IBM Plex Mono", monospace; font-size: 15px; letter-spacing: .08em; color: var(--c0); }
+  h1 { font-size: 92px; line-height: 1; font-weight: 700; letter-spacing: -.02em; }
+  .sub { font-size: 23px; line-height: 1.5; color: var(--muted); }
+  .chips { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip { font-family: "IBM Plex Mono", monospace; font-size: 15px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); }
+  .chip b { color: var(--ink); font-weight: 500; }
+  svg { position: absolute; right: 0; top: 0; }
+  svg text { font-family: "IBM Plex Sans KR", sans-serif; dominant-baseline: central; }
+  .edge { fill: none; stroke-width: 2.5; stroke-opacity: .55; }
+  .edge.c { stroke-width: 1.5; stroke-opacity: .4; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="copy">
+    <p class="eyebrow">SPRING · CS · 네트워크 · 자료구조 · 알고리즘</p>
+    <h1>마인드맵</h1>
+    <p class="sub">백엔드 면접과 코딩테스트에 나오는 개념을 한 장의 지도로 펼쳐 보고, 개념마다 동작 원리 · 코드 · 30초 답변까지 정리했습니다.</p>
+    <div class="chips">
+      <span class="chip"><b>5</b> 탭</span><span class="chip"><b>41</b> 주제</span><span class="chip"><b>858</b> 개념</span><span class="chip"><b>203</b> 심화</span>
+    </div>
+  </div>
+  <svg id="map" width="760" height="640" viewBox="0 0 760 640"></svg>
+</div>
+<script>
+  // 가운데 노드에서 다섯 탭이 가지를 뻗고, 탭마다 대표 개념 몇 개를 단다
+  const tabs = [
+    { name: 'Spring', c: 'c0', y: 92, kids: ['IoC · DI', 'AOP', '트랜잭션', 'JPA'] },
+    { name: 'CS 기초', c: 'c1', y: 212, kids: ['운영체제', '데이터베이스', 'JVM'] },
+    { name: '네트워크', c: 'c2', y: 332, kids: ['TCP', 'HTTP/2', 'epoll', 'VPC'] },
+    { name: '자료구조', c: 'c3', y: 452, kids: ['해시', 'B+Tree', '힙'] },
+    { name: '알고리즘', c: 'c4', y: 562, kids: ['DP', 'BFS', 'LIS'] },
+  ];
+  document.fonts.ready.then(draw);
+  function draw() {
+  const svg = document.getElementById('map');
+  const ctx = document.createElement('canvas').getContext('2d');
+  const w = (t, f) => { ctx.font = f + ' "IBM Plex Sans KR"'; return ctx.measureText(t).width; };
+  const curve = (x0, y0, x1, y1) => { const m = (x0 + x1) / 2; return `M${x0},${y0} C${m},${y0} ${m},${y1} ${x1},${y1}`; };
+  const rootX = 150, rootY = 320, rootW = 128, brX = 300, kidX = 520;
+  let edges = '', nodes = '';
+  for (const t of tabs) {
+    const bw = w(t.name, '600 19px') + 40;
+    edges += `<path class="edge" style="stroke:var(--${t.c})" d="${curve(rootX + rootW / 2, rootY, brX, t.y)}"/>`;
+    nodes += `<rect x="${brX}" y="${t.y - 21}" width="${bw}" height="42" rx="21" fill="var(--${t.c})"/>` +
+      `<text x="${brX + bw / 2}" y="${t.y}" text-anchor="middle" fill="var(--on)" font-size="19" font-weight="600">${t.name}</text>`;
+    const gap = 30, top = t.y - (t.kids.length - 1) * gap / 2;
+    t.kids.forEach((k, i) => {
+      const ky = top + i * gap, kw = w(k, '400 15px') + 36;
+      edges += `<path class="edge c" style="stroke:var(--${t.c})" d="${curve(brX + bw, t.y, kidX, ky)}"/>`;
+      nodes += `<rect x="${kidX}" y="${ky - 12}" width="${kw}" height="24" rx="7" fill="var(--surface)" stroke="var(--line)"/>` +
+        `<circle cx="${kidX + 13}" cy="${ky}" r="4" fill="var(--${t.c})"/>` +
+        `<text x="${kidX + 24}" y="${ky}" fill="var(--ink)" font-size="15">${k}</text>`;
+    });
+  }
+  nodes += `<rect x="${rootX - rootW / 2}" y="${rootY - 30}" width="${rootW}" height="60" rx="30" fill="var(--ink)"/>` +
+    `<text x="${rootX}" y="${rootY}" text-anchor="middle" fill="var(--bg)" font-size="24" font-weight="700">Backend</text>`;
+  svg.innerHTML = edges + nodes;
+  document.body.dataset.ready = '1';
+  }
+</script>
+</body>
+</html>

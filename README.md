@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/keyvisual/keyvisual-dark.png">
+  <img src="docs/keyvisual/keyvisual-light.png" alt="마인드맵: Spring · CS 기초 · 네트워크 · 자료구조 · 알고리즘 개념 858개를 한 장의 지도로">
+</picture>
+
 # 마인드맵
 
 백엔드 면접과 코딩테스트 준비를 위해 Spring · CS 기초 · 네트워크 · 자료구조 · 알고리즘 개념을 마인드맵으로 정리한 학습 페이지입니다.
@@ -81,6 +86,9 @@ content/
   types.ts                      데이터 타입
   index.ts                      탭과 주제 목록
   <탭>/<탭>-<n>.ts              주제 하나
+docs/
+  screenshots/                  README 스크린샷
+  keyvisual/                    README 키 비주얼 (keyvisual.html을 render.mjs로 PNG로 찍음)
 scripts/
   validate.ts                   콘텐츠 검사 (빌드 전 자동 실행)
   build-search.ts               검색 인덱스 생성 (빌드 전 자동 실행)
