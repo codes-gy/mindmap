@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: '마인드맵', template: '%s | 마인드맵' },
   description: 'Spring · CS 기초 · 네트워크 · 자료구조 · 알고리즘 개념을 마인드맵으로 정리한 백엔드 면접 학습 페이지',
+  // 미리보기 이미지는 app/opengraph-image.png, app/twitter-image.png 파일이 모든 페이지에 붙는다
+  openGraph: { siteName: '마인드맵', locale: 'ko_KR', type: 'website' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {

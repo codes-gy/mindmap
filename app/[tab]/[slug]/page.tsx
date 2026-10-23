@@ -10,17 +10,24 @@ import { mustTitle, resolve } from '@/lib/view';
 // 개념 주소로 바로 들어오거나 새로고침하면 카드 대신 이 페이지를 그린다 (검색 엔진도 이 페이지를 본다)
 export const generateStaticParams = allSlugParams;
 
+// 페이지에서 openGraph를 정하면 루트의 설정을 통째로 덮으므로, 공통 항목과 미리보기 이미지를 다시 넣는다
+const SHARED_OG = {
+  siteName: '마인드맵',
+  locale: 'ko_KR',
+  images: [{ url: '/opengraph-image.png', width: 1280, height: 640, alt: '마인드맵: Spring · CS 기초 · 네트워크 · 자료구조 · 알고리즘 개념 858개를 한 장의 지도로' }],
+};
+
 export async function generateMetadata({ params }: PageProps<'/[tab]/[slug]'>): Promise<Metadata> {
   const { tab, slug } = await params;
   const r = resolve(tab, slug);
   if (!r) return {};
-  if (r.kind === 'must') return { title: mustTitle(r.topic), description: r.topic.must.join(' ') };
+  if (r.kind === 'must') return { title: mustTitle(r.topic), description: r.topic.must.join(' '), openGraph: { ...SHARED_OG, title: mustTitle(r.topic) } };
   const c = r.located.concept;
   return {
     title: `${c.title} · ${r.tab.title}`,
     description: c.answer ?? c.def,
     alternates: { canonical: `/${r.tab.key}/${c.slug}` },
-    openGraph: { title: c.title, description: c.def, type: 'article' },
+    openGraph: { ...SHARED_OG, title: c.title, description: c.def, type: 'article' },
   };
 }
 
