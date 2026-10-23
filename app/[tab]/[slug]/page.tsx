@@ -73,9 +73,9 @@ export default async function ConceptPage({ params }: PageProps<'/[tab]/[slug]'>
 function PageNav({ nav }: { nav: { prev: string; next: string; pos: string } }) {
   return (
     <nav className="nav page-nav" aria-label="이전 · 다음 개념">
-      <Link href={nav.prev}>← 이전</Link>
+      <Link href={nav.prev} prefetch>← 이전</Link>
       <span className="pos">{nav.pos}</span>
-      <Link href={nav.next}>다음 →</Link>
+      <Link href={nav.next} prefetch>다음 →</Link>
     </nav>
   );
 }

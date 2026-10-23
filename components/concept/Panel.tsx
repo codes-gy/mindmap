@@ -53,10 +53,11 @@ export function Panel({ id, color, cat, title, parts, body, nav }: {
       )}
       <div className="doc">{parts ? parts[cur] : body}</div>
       <DoneButton id={id} />
+      {/* 기본 프리페치는 공통 껍데기만 받으므로, 바로 다음에 누를 이전·다음은 본문까지 받는다 */}
       <div className="nav">
-        <Link href={nav.prev} scroll={false} replace>← 이전</Link>
+        <Link href={nav.prev} scroll={false} replace prefetch>← 이전</Link>
         <span className="pos">{nav.pos}</span>
-        <Link href={nav.next} scroll={false} replace>다음 →</Link>
+        <Link href={nav.next} scroll={false} replace prefetch>다음 →</Link>
       </div>
     </aside>
   );
