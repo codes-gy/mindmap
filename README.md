@@ -4,6 +4,23 @@
 
 **바로 보기:** https://mindmap-xxxx.vercel.app <!-- Vercel 배포 후 주소로 교체 -->
 
+## 화면
+
+![마인드맵에서 개념을 누르면 설명 카드가 뜬다](docs/screenshots/mindmap-card.png)
+
+| 학습 현황 | 다크 모드 |
+|---|---|
+| ![탭별 진도와 다음에 볼 개념](docs/screenshots/dashboard.png) | ![다크 모드 마인드맵](docs/screenshots/dark.png) |
+| **개념 단독 페이지** (`/net/tcp`) | **검색** |
+| ![개념 · 코드·실무 · 면접으로 나뉜 개념 페이지](docs/screenshots/concept-page.png) | ![개념 이름과 면접 질문으로 검색](docs/screenshots/search.png) |
+
+<details>
+<summary>휴대폰 화면</summary>
+
+<img src="docs/screenshots/mobile.png" alt="휴대폰 너비의 개념 페이지" width="320">
+
+</details>
+
 ## 탭 구성
 
 | 탭 | 주제 | 개념 | 다루는 범위 |
