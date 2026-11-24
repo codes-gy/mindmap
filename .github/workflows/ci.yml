@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # 콘텐츠(탭 · 주제 · 개념) 구조 검사
+      - run: npm run validate
+
+      - run: npm run lint
+
+      - run: npm test
+
+      # prebuild가 콘텐츠 검사와 검색 인덱스 생성을 다시 돈다
+      - run: npm run build
+
+      - name: Playwright 브라우저 설치
+        run: npx playwright install --with-deps chromium
+
+      # 빌드 결과를 next start로 띄워 화면 스모크 테스트
+      - run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

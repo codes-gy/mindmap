@@ -7,7 +7,9 @@
 
 백엔드 면접과 코딩테스트 준비를 위해 Spring · CS 기초 · 네트워크 · 자료구조 · 알고리즘 개념을 마인드맵으로 정리한 학습 페이지입니다.
 
-**바로 보기:** https://mindmap-xxxx.vercel.app <!-- Vercel 배포 후 주소로 교체 -->
+**바로 보기:** https://mindmap-psi-dusky.vercel.app
+
+[![CI](https://github.com/codes-gy/mindmap/actions/workflows/ci.yml/badge.svg)](https://github.com/codes-gy/mindmap/actions/workflows/ci.yml)
 
 ## 화면
 
@@ -144,6 +146,8 @@ npm test             # 단위 테스트 (Vitest)
 npm run build        # 콘텐츠 검사 → 검색 인덱스 → 빌드
 npm run test:e2e     # 빌드 후 화면 테스트 (Playwright, 로컬 Chrome 사용)
 ```
+
+PR과 `main` push마다 GitHub Actions(`.github/workflows/ci.yml`)가 콘텐츠 검사 → lint → 단위 테스트(Vitest) → 빌드 → 화면 스모크 테스트(Playwright, Chromium)를 차례로 돌립니다.
 
 ## 배포
 
